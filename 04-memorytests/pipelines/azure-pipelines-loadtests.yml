@@ -1,0 +1,30 @@
+trigger: none
+
+pool:
+  name: Default
+
+steps:
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml build'
+  displayName: 'Docker Compose - Build'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml up -d api && sleep 30'
+  displayName: 'Docker Compose - Run Api detached'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml run warmup && sleep 5 && docker-compose  -f ./04-memorytests/docker-compose-loadtests.yml up wrk6sync'
+  displayName: 'Docker Compose - Load tests - 6 Thread 6 Users 10 Seconds - Sync'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml run warmup && sleep 5 && docker-compose  -f ./04-memorytests/docker-compose-loadtests.yml up wrk6async'
+  displayName: 'Docker Compose - Load tests - 6 Thread 6 Users 10 Seconds - Async'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml run warmup && sleep 5 && docker-compose  -f ./04-memorytests/docker-compose-loadtests.yml up wrk12sync'
+  displayName: 'Docker Compose - Load tests - 12 Thread 50 Users 10 Seconds - Sync'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml run warmup && sleep 5 && docker-compose  -f ./04-memorytests/docker-compose-loadtests.yml up wrk12async'
+  displayName: 'Docker Compose - Load tests - 12 Thread 50 Users 10 Seconds - Async'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-loadtests.yml down'
+  displayName: 'Docker Compose - Cleanup'

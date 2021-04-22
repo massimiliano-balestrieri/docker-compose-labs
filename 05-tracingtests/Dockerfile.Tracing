@@ -1,0 +1,43 @@
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+
+WORKDIR /tools/wrk
+
+RUN apt-get update && apt-get install build-essential libssl-dev git zip -y
+RUN git clone https://github.com/wg/wrk.git /tools/wrk
+RUN make
+
+WORKDIR /tools/dottrace
+
+RUN wget -qO- https://download.jetbrains.com/resharper/dotUltimate.2020.3.4/JetBrains.dotTrace.CommandLineTools.linux-x64.2020.3.4.tar.gz | tar xvz -C /tools/dottrace
+
+WORKDIR /tools/dotmemory
+
+RUN wget -qO- https://download.jetbrains.com/resharper/dotUltimate.2020.3.4/JetBrains.dotMemory.Console.linux-x64.2020.3.4.tar.gz | tar xvz -C /tools/dotmemory
+
+WORKDIR /app
+
+COPY ./src ./src
+
+WORKDIR /app/src/FriendsApi.Host
+RUN dotnet restore 
+RUN dotnet publish -c Release -o out
+
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+
+RUN apt-get update && apt-get install procps wget -y
+
+WORKDIR /tools
+COPY --from=build /tools ./
+
+WORKDIR /app
+
+VOLUME /app/snapshots
+
+COPY --from=build /app/src/FriendsApi.Host/out ./
+COPY ./entrypoint-tracing.sh ./
+COPY ./docs/post.lua /tmp
+
+RUN chmod 755 /app/entrypoint-tracing.sh
+
+CMD /app/entrypoint-tracing.sh
+# CMD /bin/bash

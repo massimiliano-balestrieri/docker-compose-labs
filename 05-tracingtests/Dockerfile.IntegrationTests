@@ -1,0 +1,15 @@
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+
+WORKDIR /app
+
+VOLUME /app/results
+
+COPY . .
+
+WORKDIR /app/tests/FriendsApi.SelfHostedTests/
+
+ENV ASPNETCORE_ENVIRONMENT=compose
+
+RUN dotnet restore 
+
+CMD  dotnet test ./FriendsApi.SelfHostedTests.csproj --configuration Release --logger "trx;LogFileName=/app/results/testresults-selfhostedtests.trx" /p:CollectCoverage=true  /p:CoverletOutputFormat=Cobertura /p:CoverletOutput=/app/results/results-selfhostedtests.xml /p:Include="[FriendsApi*]*"

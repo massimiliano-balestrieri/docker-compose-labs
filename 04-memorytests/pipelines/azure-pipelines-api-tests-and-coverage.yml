@@ -1,0 +1,39 @@
+trigger:
+- main
+
+pool:
+  name: Default
+
+variables:
+  disable.coverage.autogenerate: 'true'
+
+steps:
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-testapi.yml build'
+  displayName: 'Docker Compose - Build'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-testapi.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-testapi.yml up unit integration'
+  displayName: 'Docker Compose - Unit And Integration Test Against Docker Sql Server'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-testapi.yml up coverage'
+  displayName: 'Docker Compose - Code Coverage Report'
+
+- bash: 'docker-compose -f ./04-memorytests/docker-compose-testapi.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results'
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(Build.SourcesDirectory)/04-memorytests/results/*.trx'
+    mergeTestResults: true
+
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage'
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(Build.SourcesDirectory)/04-memorytests/results/Cobertura.xml'
+    reportDirectory: '$(Build.SourcesDirectory)/04-memorytests/results'
