@@ -1,0 +1,31 @@
+trigger: none
+
+pool:
+  name: Default
+
+steps:
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-tracingtests.yml build'
+  displayName: 'Docker Compose - Build'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-tracingtests.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-tracingtests.yml build'
+  displayName: 'Docker Compose - Build Compose'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-tracingtests.yml up api'
+  displayName: 'Docker Compose - Stress Api and profile memory with dotmemory'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-tracingtests.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- bash: 'tar -czvf $(Build.ArtifactStagingDirectory)/results-$(Build.BuildId).tar.gz -C $(Build.SourcesDirectory)/05-tracingtests/snapshots .'
+  displayName: 'TarGz results'
+    
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/results-$(Build.BuildId).tar.gz'
+    ArtifactName: 'results'
+    publishLocation: 'Container'
+  displayName: 'Publish results'

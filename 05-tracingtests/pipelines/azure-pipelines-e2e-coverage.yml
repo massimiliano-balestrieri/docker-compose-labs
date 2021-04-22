@@ -1,0 +1,39 @@
+trigger:
+- main
+
+pool:
+  name: Default
+
+variables:
+  disable.coverage.autogenerate: 'true'
+
+steps:
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-testapi.yml build'
+  displayName: 'Docker Compose - Build'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-testapi.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-testapi.yml up e2e'
+  displayName: 'Docker Compose - E2e Test only'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-testapi.yml up coverage'
+  displayName: 'Docker Compose - E2e Client Coverage'
+
+- bash: 'docker-compose -f ./05-tracingtests/docker-compose-testapi.yml down'
+  displayName: 'Docker Compose - Cleanup'
+
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results'
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(Build.SourcesDirectory)/05-tracingtests/results/*.trx'
+    mergeTestResults: true
+
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage'
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(Build.SourcesDirectory)/05-tracingtests/results/Cobertura.xml'
+    reportDirectory: '$(Build.SourcesDirectory)/05-tracingtests/results'

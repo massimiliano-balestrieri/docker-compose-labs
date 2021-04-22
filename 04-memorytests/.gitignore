@@ -1,0 +1,5 @@
+results/**
+!results/entrypoint.sh
+snapshots/**
+!snapshots/.gitkeep
+!snapshots/readme.txt

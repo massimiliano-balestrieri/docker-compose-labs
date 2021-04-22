@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+
+WORKDIR /app
+VOLUME /app/results
+
+COPY . .
+
+RUN dotnet tool install --tool-path /app/tools dotnet-reportgenerator-globaltool
+CMD /app/tools/reportgenerator -reports:/app/results/results*.xml -targetdir:/app/results -reporttypes:HtmlInline_AzurePipelines\;Cobertura  -assemblyfilters:+FriendsApi* 
+#classfilters:+*\;-*.Proxies.*
